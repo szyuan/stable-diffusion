@@ -3,6 +3,7 @@
 }
 #header {
     text-decoration: dotted underline;
+    color: #333
 }
 #search {
     margin-top: 20vh;
@@ -94,4 +95,48 @@ label {
 }
 #about {
     background-color: #DCDCDC;
+}
+
+
+.main {
+    display: flex;
+}
+.tip ul {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    font-size: 12px;
+}
+.tip ul li {
+    margin: 0;
+    padding: 0;
+}
+.tip ul li div{
+    margin: 0;
+    padding: 0;
+    color: #666;
+}
+.tip ul li .title{
+    font-weight: bold;
+    color: #333;
+}
+
+.right {
+    border-left: 1px solid #ccc;
+    width: 320px;
+    color: #333
+}
+.example-item {
+    font-size: 14px;
+}
+.example-item img {
+    width: 100%;
+}
+.prompt {
+    margin: 0;
+    padding: 0;
+}
+.eng {
+    color: #999;
+    font-size: 12px;
 }

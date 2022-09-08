@@ -55,10 +55,17 @@ function clearFields(form) {
 
 const BLANK_IMAGE_URL = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
 async function generateSubmit(form) {
-    const prompt = document.querySelector("#prompt").value;
+    let promptOrigin = document.querySelector("#prompt").value;
+    let prompt;
+
+    // NOTE 翻译
+    prompt = await translateText(promptOrigin);
+    console.log('prompt', prompt);
 
     // Convert file data to base64
     let formData = Object.fromEntries(new FormData(form));
+    formData.prompt = prompt;
+    console.log('formData', formData);
     formData.initimg = formData.initimg.name !== '' ? await toBase64(formData.initimg) : null;
 
     let strength = formData.strength;
@@ -117,7 +124,7 @@ async function generateSubmit(form) {
 
         // Re-enable form, remove no-results-message
         form.querySelector('fieldset').removeAttribute('disabled');
-        document.querySelector("#prompt").value = prompt;
+        document.querySelector("#prompt").value = promptOrigin;
         document.querySelector('progress').setAttribute('value', '0');
 
         if (noOutputs) {
@@ -127,14 +134,65 @@ async function generateSubmit(form) {
 
     // Disable form while generating
     form.querySelector('fieldset').setAttribute('disabled','');
-    document.querySelector("#prompt").value = `Generating: "${prompt}"`;
+    document.querySelector("#prompt").value = `生成中: "${promptOrigin}"`;
+}
+
+function translateText(text) {
+    var appKey = '';
+    var key = '';
+    var salt = (new Date).getTime();
+    var curtime = Math.round(new Date().getTime()/1000);
+    var query = text; //'您好，欢迎再次使用有道智云文本翻译API接口服务';
+    // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+    var from = 'zh-CHS';
+    var to = 'en';
+    var str1 = appKey + truncate(query) + salt + curtime + key;
+    // var vocabId =  '您的用户词表ID';
+    //console.log('---',str1);
+
+    var sign = CryptoJS.SHA256(str1).toString(CryptoJS.enc.Hex);
+
+
+    function truncate(q){
+        var len = q.length;
+        if(len<=20) return q;
+        return q.substring(0, 10) + len + q.substring(len-10, len);
+    }
+
+
+    return new Promise((resolve) => {
+        $.ajax({
+            url: 'https://openapi.youdao.com/api',
+            type: 'post',
+            dataType: 'jsonp',
+            data: {
+                q: query,
+                appKey: appKey,
+                salt: salt,
+                from: from,
+                to: to,
+                sign: sign,
+                signType: "v3",
+                curtime: curtime,
+                // vocabId: vocabId,
+            },
+            success: function (data) {
+                // console.log(data);
+                let result = text;
+                if (data.translation && data.translation[0]) {
+                    result = data.translation[0];
+                }
+                result.replace('.', ',');
+                resolve(result);
+            } 
+        });
+    })
 }
 
 window.onload = () => {
     document.querySelector("#generate-form").addEventListener('submit', (e) => {
         e.preventDefault();
         const form = e.target;
-
         generateSubmit(form);
     });
     document.querySelector("#generate-form").addEventListener('change', (e) => {
